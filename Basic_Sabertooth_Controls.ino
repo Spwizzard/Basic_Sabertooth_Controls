@@ -1,4 +1,3 @@
-#include <Sabertooth.h>
 
 //Heavily stripped down and modified version of James Starkman's code which controlled the NASA robot in the May, 2014 competition
 
@@ -16,26 +15,28 @@
  * like a computer would give them (vector[angle for direction,magnitude for velocity)
  */
 int motorOneAddress = 128;
-int motorTwoAddress = 129;
-int motor1Pin = 25;
+int motor1Pin = 1;
 
-Sabertooth ST1(motorOneAddress);
-Sabertooth ST2(motorTwoAddress);
+int commandNumber = 1;
 
 //this runs once as soon as the arduino is turned on
 void setup(){
-  SabertoothTXPinSerial.begin(9600);
+  Serial.begin(9600);
   pinMode(motor1Pin, OUTPUT);
-  ST1.autobaud(); //sets the baud rate
-  ST1.setMinVoltage(0); //sets min voltage
-  ST1.setMaxVoltage(128); //sets max voltage
-  ST1.setDeadband(0); //sets the deadband
-  ST1.setRamping(26); //sets the ramp speed (full backwards to full forwards). value of 26 is about 1 second.
+
 }
 
 //the code in here gets run oveer and over again until the arduino is turned off
 void loop(){
-  ST1.drive(32);   
+      Serial.write(motorOneAddress);
+      //send motor command
+      Serial.write(commandNumber);
+      //send motor speed
+      Serial.write(32);
+      //send checksum
+      int check = (motorOneAddress + commandNumber + 32) & B01111111;
+      Serial.write(check);
+
 }
 
 
