@@ -19,71 +19,27 @@ int motorOneAddress = 128;
 int motorTwoAddress = 129;
 int motor1Pin = 25;
 
+Sabertooth ST1(motorOneAddress);
+Sabertooth ST2(motorTwoAddress);
+
 //this runs once as soon as the arduino is turned on
 void setup(){
-  Serial.begin(9600); //pc connection
+  SabertoothTXPinSerial.begin(9600);
   pinMode(motor1Pin, OUTPUT);
-  setupMinMaxVoltage(motorOneAddress, 0,128); //sets Min / Max volts
-  setupBaudRate(motorOneAddress, 2); //sets baud rate
-  setupDeadband(motorOneAddress, 0); //sets the deadband
+  ST1.autobaud(); //sets the baud rate
+  ST1.setMinVoltage(0); //sets min voltage
+  ST1.setMaxVoltage(128); //sets max voltage
+  ST1.setDeadband(0); //sets the deadband
+  ST1.setRamping(26); //sets the ramp speed (full backwards to full forwards). value of 26 is about 1 second.
 }
 
 //the code in here gets run oveer and over again until the arduino is turned off
 void loop(){
     //write code here to send all the commands you implement once
-    driveMotor(motorOneAddress,100);
+    ST1.drive(64); //tells both motor 1 and motor 2 to go forward
+    delay(500);
+    ST1.drive(-64);//tells both motor 1 and motor 2 to go backwards
+    delay(500);
 }
 
-// use this method whenever you need to send a packet to Sabertooth
-void sendSerialPacket(int address, int command, int value){ 
-  Serial1.write(address); //starts command to given address
-  Serial1.write(command); //sends the command name
-  Serial1.write(value); //sends the given value to the specified command
-  Serial1.write((address + command + value) & 0B01111111); //sends the checksum
-}
-
-//commands 0,1
-//this sends a command to the motor specified by address, and sets it to the given speed. //Speed is -127-127, where -127 is full speed reverse and 127 is full speed forward
-void driveMotor(int address, int speed){
-
-      Serial1.write(address);
-      //send motor command
-      int command = 0; //motor 1
-      if(speed < 0){
-        command++;
-        speed *= -1;
-      }
-      Serial1.write(command);
-      //send motor speed
-      Serial1.write(speed);
-      //send checksum
-      int check = (address + command + speed) & B01111111;
-      Serial1.write(check);
-  }
-  
-//setup method used to set minimum and maximum voltage to motors
-void setupMinMaxVoltage(int address, int minVoltage, int maxVoltage){
-  if((minVoltage < 0) || (minVoltage > 120) || (maxVoltage < 0) || (maxVoltage > 128)){ //makes sure inputs are allowed
-    return;
-  }
-  sendSerialPacket(address, 2, minVoltage); // sets the minimum allowed Voltage 
-  sendSerialPacket(address, 3, maxVoltage); // sets the maximum allowed Voltage
-}
-
-//setup method used to set the baud rate to motors
-void setupBaudRate(int address, int baudRate){
-  if((baudRate < 1) || (baudRate > 5)){ // makes sure inputs are allowed
-    return;
-  }
-
-  sendSerialPacket(address, 15, baudRate); // sets the baudRate cooresponding to the value given
-}
-
-//setup method used to set the deadband
-void setupDeadband(int address, int deadband){
-  if((deadband < 0) || (deadband > 127)){ // makes sure inputs are allowed
-    return;
-  }
-  sendSerialPacket(address, 17, deadband); // sets the range to be 127 - deadband < off < 128 + deadband
-}
 
