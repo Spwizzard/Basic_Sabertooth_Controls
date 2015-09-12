@@ -35,11 +35,7 @@ void setup(){
 
 //the code in here gets run oveer and over again until the arduino is turned off
 void loop(){
-    //write code here to send all the commands you implement once
-    ST1.drive(64); //tells both motor 1 and motor 2 to go forward
-    delay(500);
-    ST1.drive(-64);//tells both motor 1 and motor 2 to go backwards
-    delay(500);
+  ST1.drive(32);   
 }
 
 
