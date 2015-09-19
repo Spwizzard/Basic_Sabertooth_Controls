@@ -16,11 +16,14 @@
  */
 int motorOneAddress = 128;
 int motor1Pin = 1;
+int conveyorButtonPin = 15;
+bool activateConveyor = false;
 
 //this runs once as soon as the arduino is turned on
 void setup(){
   Serial.begin(9600); //pc connection
   pinMode(motor1Pin, OUTPUT);
+  pinMode(conveyorButtonPin, INPUT);
   setupMinMaxVoltage(motorOneAddress, 0,128); //sets Min / Max volts
   setupBaudRate(motorOneAddress, 2); //sets baud rate
   setupDeadband(motorOneAddress, 0); //sets the deadband
@@ -29,7 +32,14 @@ void setup(){
 //the code in here gets run over and over again until the arduino is turned off
 void loop(){
     //write code here to send all the commands you implement once
-    driveMotor(motorOneAddress,100);
+    checkActivateConveyorButton();
+    if(activateConveyor){
+      driveMotor(motorOneAddress,32);
+    }
+    else{
+      driveMotor(motorOneAddress,0);
+    }
+    
 }
 
 // use this method whenever you need to send a packet to Sabertooth
@@ -40,23 +50,27 @@ void sendSerialPacket(int address, int command, int value){
   Serial1.write((address + command + value) & 0B01111111); //sends the checksum
 }
 
+void ActivateConveyorButton(){
+  int value = DigitalRead(conveyorButtonPin);
+  if(value == HIGH){
+    activateConveyor == true;
+  }
+  else{
+    activateConveyor == false;
+  }
+}
+
 //commands 0,1
 //this sends a command to the motor specified by address, and sets it to the given speed. //Speed is -127-127, where -127 is full speed reverse and 127 is full speed forward
 void driveMotor(int address, int speed){
-
-      Serial1.write(address);
-      //send motor command
+      
       int command = 0; //motor 1
       if(speed < 0){
         command++;
         speed *= -1;
       }
       Serial1.write(command);
-      //send motor speed
-      Serial1.write(speed);
-      //send checksum
-      int check = (address + command + speed) & B01111111;
-      Serial1.write(check);
+      sendSerialPacket(address, command, speed);
   }
   
 //setup method used to set minimum and maximum voltage to motors
