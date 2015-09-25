@@ -15,15 +15,18 @@
  * like a computer would give them (vector[angle for direction,magnitude for velocity)
  */
 int motorOneAddress = 128;
-int motor1Pin = 1;
+int sabertooth1Pin = 1;
 int conveyorButtonPin = 15;
+int digWheelButtonPin = 16;
 bool activateConveyor = false;
+bool activateDigWheel = false;
 
 //this runs once as soon as the arduino is turned on
 void setup(){
   Serial.begin(9600); //pc connection
-  pinMode(motor1Pin, OUTPUT);
+  pinMode(sabertooth1Pin, OUTPUT);
   pinMode(conveyorButtonPin, INPUT);
+  pinMode(digWheelButtonPin, INPUT);
   setupMinMaxVoltage(motorOneAddress, 0,128); //sets Min / Max volts
   setupBaudRate(motorOneAddress, 2); //sets baud rate
   setupDeadband(motorOneAddress, 0); //sets the deadband
@@ -32,12 +35,20 @@ void setup(){
 //the code in here gets run over and over again until the arduino is turned off
 void loop(){
     //write code here to send all the commands you implement once
-    checkActivateConveyorButton();
+
+    activateButton(conveyorButtonPin, activateConveyor);
     if(activateConveyor){
-      driveMotor(motorOneAddress,32);
+      driveMotor(motorOneAddress, 1, 32);
     }
     else{
-      driveMotor(motorOneAddress,0);
+      driveMotor(motorOneAddress, 1, 0);
+    }
+    activateButton(digWheelButtonPin, activateDigWheel);
+    if(activateDigWheel){
+      driveMotor(motorOneAddress, 2, 32);
+    }
+    else{
+      driveMotor(motorOneAddress, 2, 0);
     }
     
 }
@@ -50,28 +61,40 @@ void sendSerialPacket(int address, int command, int value){
   Serial1.write((address + command + value) & 0B01111111); //sends the checksum
 }
 
-void ActivateConveyorButton(){
-  int value = DigitalRead(conveyorButtonPin);
+//if the digitalRead of the given pin is high, then set the boolean to true. If not, set the boolean to false.
+void activateButton(int buttonPin, bool buttonBool){
+  int value = digitalRead(buttonPin);
   if(value == HIGH){
-    activateConveyor == true;
+    buttonBool == true;
+    Serial.println(1);
   }
   else{
-    activateConveyor == false;
+    buttonBool == false;
+    Serial.println(0);
   }
 }
 
-//commands 0,1
-//this sends a command to the motor specified by address, and sets it to the given speed. //Speed is -127-127, where -127 is full speed reverse and 127 is full speed forward
-void driveMotor(int address, int speed){
-      
-      int command = 0; //motor 1
-      if(speed < 0){
-        command++;
-        speed *= -1;
-      }
-      Serial1.write(command);
-      sendSerialPacket(address, command, speed);
+//commands 0,1 or 4,5
+//given address takes inputs of motor 1 or motor 2
+//Speed is -127-127, where -127 is full speed reverse and 127 is full speed forward
+void driveMotor(int address,int motor, int speed){
+  int command;
+  if(motor == 1){
+   command = 0;
   }
+  else if(motor == 2){
+    command = 4;
+  }
+  else{
+    return;
+  }
+  if(speed < 0){
+    command++;
+    speed *= -1;
+  }
+  Serial1.write(command);
+  sendSerialPacket(address, command, speed);
+}
   
 //setup method used to set minimum and maximum voltage to motors
 void setupMinMaxVoltage(int address, int minVoltage, int maxVoltage){
