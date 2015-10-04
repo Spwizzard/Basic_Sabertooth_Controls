@@ -34,7 +34,11 @@ void setup(){
 
 //the code in here gets run over and over again until the arduino is turned off
 void loop(){
-    //write code here to send all the commands you implement once
+   driveMotor(motorOneAddress, 1, 32);
+   driveMotor(motorOneAddress, 2, 32);
+   sendSerialPacket(128,1,32);
+  
+  /*
     activateButton(conveyorButtonPin, activateConveyor);
     if(activateConveyor){
       driveMotor(motorOneAddress, 1, 32);
@@ -49,18 +53,19 @@ void loop(){
     else{
       driveMotor(motorOneAddress, 2, 0);
     }
+    */
 }
 
 //if the digitalRead of the given pin is high, then set the boolean to true. If not, set the boolean to false.
-void activateButton(int buttonPin, bool buttonBool){
+bool activateButton(int buttonPin, bool buttonBool){
   int value = digitalRead(buttonPin);
   if(value == HIGH){
-    buttonBool == true;
     Serial.println(1 + "," + buttonPin);
+    return true;
   }
   else{
-    buttonBool == false;
     Serial.println(0 + "," + buttonPin);
+    return false;
   }
 }
 
