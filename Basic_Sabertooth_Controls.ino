@@ -1,19 +1,6 @@
 
 //Heavily stripped down and modified version of James Starkman's code which controlled the NASA robot in the May, 2014 competition
 
-/*
- * Task:
- * Implement commands 0-5, 15-17 in code that could be run on an arduino. 
- * You are outputting these commands over serial to a wire that is connected to the motor controller. 
- * Assume defaults or make up reasonable values for missing information. 
- * (eg pick any valid motor address, and use baud rate 9600)
- * 
- * If time/interest permits, write some code that has addresses for 4 motors. 
- * Then make commands that turn the two motors on the right faster than the ones on the 
- * left to execute a curving left turn, and make one for right turn etc. Think about making 
- * controls that a person with a joystick could input, and/or functions that take direction 
- * like a computer would give them (vector[angle for direction,magnitude for velocity)
- */
 int motorOneAddress = 128;
 int sabertooth1Pin = 1;
 int conveyorButtonPin = 15;
@@ -27,44 +14,37 @@ void setup(){
   pinMode(sabertooth1Pin, OUTPUT);
   pinMode(conveyorButtonPin, INPUT);
   pinMode(digWheelButtonPin, INPUT);
-  setupMinMaxVoltage(motorOneAddress, 0,128); //sets Min / Max volts
-  setupBaudRate(motorOneAddress, 2); //sets baud rate
-  setupDeadband(motorOneAddress, 0); //sets the deadband
+  //setupMinMaxVoltage(motorOneAddress, 0,128); //sets Min / Max volts
+  //setupBaudRate(motorOneAddress, 2); //sets baud rate
+  //setupDeadband(motorOneAddress, 0); //sets the deadband
 }
 
 //the code in here gets run over and over again until the arduino is turned off
 void loop(){
-   driveMotor(motorOneAddress, 1, 32);
-   driveMotor(motorOneAddress, 2, 32);
-   sendSerialPacket(128,1,32);
-  
-  /*
-    activateButton(conveyorButtonPin, activateConveyor);
-    if(activateConveyor){
+    if(activateButton(conveyorButtonPin)){
       driveMotor(motorOneAddress, 1, 32);
     }
     else{
       driveMotor(motorOneAddress, 1, 0);
     }
-    activateButton(digWheelButtonPin, activateDigWheel);
-    if(activateDigWheel){
+    if(activateButton(digWheelButtonPin)){
       driveMotor(motorOneAddress, 2, 32);
     }
     else{
       driveMotor(motorOneAddress, 2, 0);
     }
-    */
+
 }
 
 //if the digitalRead of the given pin is high, then set the boolean to true. If not, set the boolean to false.
-bool activateButton(int buttonPin, bool buttonBool){
+bool activateButton(int buttonPin){
   int value = digitalRead(buttonPin);
   if(value == HIGH){
-    Serial.println(1 + "," + buttonPin);
+    Serial.println(buttonPin);
     return true;
   }
   else{
-    Serial.println(0 + "," + buttonPin);
+    Serial.println(buttonPin);
     return false;
   }
 }
@@ -87,7 +67,6 @@ void driveMotor(int address,int motor, int speed){
     command++;
     speed *= -1;
   }
-  Serial1.write(command);
   sendSerialPacket(address, command, speed);
 }
 
